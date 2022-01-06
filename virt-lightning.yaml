@@ -2,7 +2,7 @@
   distro: ubuntu-16.04
   memory: 8192
   root_disk_size: 30
-  vcpus: 1
+  vcpus: 2
   networks:
   - network: virt-lightning
     ipv4: 192.168.123.11
@@ -10,7 +10,7 @@
   distro: ubuntu-16.04
   memory: 8192
   root_disk_size: 30
-  vcpus: 1
+  vcpus: 2
   networks:
   - network: virt-lightning
     ipv4: 192.168.123.12

@@ -75,11 +75,33 @@
       src: /tmp/devstack_keys/id_rsa
       dest: /root/.ssh/id_rsa
       mode: '0600'
-  - name: Copy public key
+  - name: Copy public key to root
     ansible.builtin.copy:
       src: /tmp/devstack_keys/id_rsa.pub
       dest: /root/.ssh/id_rsa.pub
-      mode: '0644'  
+      mode: '0644'
+  - name: Delete old stack keys
+    ansible.builtin.file:
+      path: /opt/stack/.ssh
+      state: absent
+  - name: Make dir for stack keys
+    ansible.builtin.file:
+      path: /opt/stack/.ssh
+      state: directory
+  - name: Enable auth for root->stack connection
+    authorized_key:
+      user: stack
+      state: present
+      key: "{{ lookup('file', '/tmp/devstack_keys/id_rsa.pub') }}"
+  - name: And enabling known_host for stack...
+    become: true
+    become_user: stack
+    shell: ssh-keyscan {{ item }} >> /opt/stack/.ssh/known_hosts
+    loop: "{{ groups['all'] }}"
+  - name: ...and root
+    shell: ssh-keyscan {{ item }} >> /root/.ssh/known_hosts
+    loop: "{{ groups['all'] }}"
+
 
 - name: Prepare devstack dir
   hosts: all
@@ -121,3 +143,8 @@
       args:
         chdir: /opt/stack/devstack
       poll: 0
+    - name: Add computes to cell
+      when: ansible_hostname == 'controller'
+      command: ./tools/discover_hosts.sh
+      args:
+        chdir: /opt/stack/devstack
